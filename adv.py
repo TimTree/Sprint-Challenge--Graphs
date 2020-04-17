@@ -5,8 +5,8 @@ from world import World
 import random
 from ast import literal_eval
 
-from util import Stack
-
+from util import Queue, Stack
+import pprint
 
 def opposite_direction(direction):
     if direction == 'n':
@@ -52,22 +52,20 @@ for room in room_graph:
         traversal_graph[room][exits] = '?'
 
 
-# print(traversal_graph)
-
 player.current_room = world.starting_room
-visited_rooms_simulation = []
-visited_rooms_simulation.append(player.current_room.id)
-
-qq = Stack()
-qq.push(player.current_room.id)
+visited_rooms_simulation = set()
+visited_rooms_simulation.add(player.current_room.id)
+qq = []
+qq.append(player.current_room.id)
 
 # while qq.size() > 0:
 while True:
     saw_question = False
+
     for direction in traversal_graph[player.current_room.id]:
         # If we haven't went to that direction yet
         if traversal_graph[player.current_room.id][direction] == '?':
-            print(player.current_room.id, direction)
+            # print(player.current_room.id, direction)
             saw_question = True
             # Add the direction to our traversal path
             traversal_path.append(direction)
@@ -76,30 +74,31 @@ while True:
             # print(traversal_graph)
             # Travel the given direction
             player.travel(direction)
-            if player.current_room.id not in visited_rooms_simulation:
-                visited_rooms_simulation.append(player.current_room.id)
             # Now that we're in the new room, fill in the old number in the opposite direction
             # If you went north, south of the new room is the old number
             # If you went west, east of the new room is the old number
             # etc
             traversal_graph[player.current_room.id][opposite_direction(direction)] = room_graph[player.current_room.id][1][opposite_direction(direction)]
+            # pprint.pprint(traversal_graph)
+            qq.append(player.current_room.id)
+            visited_rooms_simulation.add(player.current_room.id)
+            # print(qq)
             break
     if not saw_question:
+        qq.pop()
         # print(visited_rooms_simulation)
-        if len(room_graph) == len(visited_rooms_simulation):
+        if len(visited_rooms_simulation) == len(room_graph):
             break
         else:
-            # print(traversal_path)
-            for path in reversed(traversal_path):
-                print(player.current_room.id, opposite_direction(path))
-                traversal_path.append(opposite_direction(path))
-                # print(traversal_path)
-                player.travel(opposite_direction(path))
-                # print(traversal_graph[player.current_room.id])
-                if '?' in traversal_graph[player.current_room.id].values():
+            for direction in traversal_graph[player.current_room.id]:
+                if traversal_graph[player.current_room.id][direction] == qq[-1]:
+                    # print(player.current_room.id, direction)
+                    traversal_path.append(direction)
+                    player.travel(direction)
                     break
 
-        
+
+      
 
 #print(player.current_room.id)
 #print(player.current_room.get_exits())
